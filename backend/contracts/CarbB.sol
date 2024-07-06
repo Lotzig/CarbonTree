@@ -20,7 +20,7 @@ contract CarbB is ERC20, Ownable {
         uint id;
         string species;
         uint purchaseDate;
-        uint purchasePrice;
+        uint price;
         uint plantingDate;
         string location;
         string locationOwnerName;
@@ -28,13 +28,10 @@ contract CarbB is ERC20, Ownable {
     }
 
     //pour tests
-    uint public nextTokenTreeKey;
-    uint public nextTokenTreeId;
-    uint public price;
-    uint public availableTokenTreeCount;
-    // uint nextTokenTreeKey;
+    uint public nextTokenTreeKey;   // Supprimer après les tests : toujours défini par getLastAvailableTokenTreeKey
+    uint public nextTokenTreeId;    // A garder en private
+    uint public availableTokenTreeCount;    // A garder en private ou public si info intéressante pour utilisateurs ou admin
     // uint nextTokenTreeId;
-    // uint price;
     // uint availableTokenTreeCount;
 
     ///@notice The whole token/tree collection
@@ -42,23 +39,13 @@ contract CarbB is ERC20, Ownable {
 
     ///@notice The token/tree collection of each customer
     mapping(address customer => mapping(uint customerTokenTreeKey => TokenTree customerTokenTreeCollection)) public customersTokenTreeCollections;
-    
-    ///@notice Set the token/tree price 
-    function setPrice(uint _price) external onlyOwner {
-        require(_price > 0, "Tree price can not be nul");
-        price = _price;
-    }
-
-    ///@notice Get the token/tree price
-    function getPrice() external view returns (uint) {
-        return price;
-    }
 
     ///@notice Add a token/tree in the available tokens/trees mapping
-    function addTokenTree (string memory _species, uint _plantingDate, string memory _location, 
-                    string memory _locationOwnerName, string memory _locationOwnerAddress ) external onlyOwner {
+    function addTokenTree (string memory _species, uint _price, uint _plantingDate, string memory _location, 
+                    string memory _locationOwnerName, string memory _locationOwnerAddress) external onlyOwner {
         
         require(bytes(_species).length != 0, "_species can not be empty");
+        require(_price > 0, "Price can not be nul");
         require(_plantingDate != 0, "_plantingDate can not be nul");
         require(bytes(_location).length != 0, "_location can not be empty");
         require(bytes(_locationOwnerName).length != 0, "_locationOwnerName can not be empty");
@@ -69,7 +56,7 @@ contract CarbB is ERC20, Ownable {
         TokenTree memory tokenTree = TokenTree({id: nextTokenTreeId, 
                                                 species: _species, 
                                                 purchaseDate: block.timestamp, 
-                                                purchasePrice: price, 
+                                                price: _price, 
                                                 plantingDate: _plantingDate, 
                                                 location: _location, 
                                                 locationOwnerName: _locationOwnerName, 
@@ -80,6 +67,7 @@ contract CarbB is ERC20, Ownable {
         ++availableTokenTreeCount;
     }
 
+    ///@notice Get available tokens/trees mapping last key
     function getLastAvailableTokenTreeKey() public view returns (uint) {
 
         uint i = 1;
@@ -91,12 +79,12 @@ contract CarbB is ERC20, Ownable {
     }
 
     ///@notice Remove a token/tree from collection
-    function removeTokenTree(uint _tokenTreeId) external onlyOwner {
+    function removeAvailableTokenTree(uint _tokenTreeId) internal {
         
         require(availableTokenTrees[_tokenTreeId].id > 0, string.concat("Token tree not found. Token tree Id ", Strings.toString(_tokenTreeId), " does not exists"));
         delete availableTokenTrees[_tokenTreeId];
 
-        // Recalibrate token keys (avoid "blank" tokens in the mapping)
+        // Recalibrate token/tree keys (avoid "blank" tokens/trees in the mapping)
         for(uint i = _tokenTreeId; i < availableTokenTreeCount; i++) {
 
             availableTokenTrees[i] = availableTokenTrees[i+1];
@@ -109,7 +97,38 @@ contract CarbB is ERC20, Ownable {
         --availableTokenTreeCount;
     }
 
-    ///@notice Get tokens/trees available for selling
+    ///@notice Remove a token/tree from collection (admin)
+    function removeAvailableTokenTreeAdmin(uint _tokenTreeId) external onlyOwner {
+        removeAvailableTokenTree(_tokenTreeId);                
+    }
+
+    ///@notice Update an available token/tree
+    function updateTokenTree(uint _tokenTreeId, string memory _species, uint _price, uint _plantingDate, string memory _location, 
+                                string memory _locationOwnerName, string memory _locationOwnerAddress) external onlyOwner {
+
+        require(availableTokenTrees[_tokenTreeId].id > 0, string.concat("Token tree not found. Token tree Id ", Strings.toString(_tokenTreeId), " does not exists"));
+        require(bytes(_species).length != 0, "_species can not be empty");
+        require(_price > 0, "Price can not be nul");
+        require(_plantingDate != 0, "_plantingDate can not be nul");
+        require(bytes(_location).length != 0, "_location can not be empty");
+        require(bytes(_locationOwnerName).length != 0, "_locationOwnerName can not be empty");
+        require(bytes(_locationOwnerAddress).length != 0, "_locationOwnerAddress can not be empty");
+
+        TokenTree memory tokenTree = TokenTree({id: _tokenTreeId, 
+                                                species: _species, 
+                                                purchaseDate: block.timestamp, 
+                                                price: _price, 
+                                                plantingDate: _plantingDate, 
+                                                location: _location, 
+                                                locationOwnerName: _locationOwnerName, 
+                                                locationOwnerAddress: _locationOwnerAddress});
+
+        availableTokenTrees[_tokenTreeId] = tokenTree;
+
+    }
+
+
+    ///@notice Get tokens/trees available for bying
     function getAvailableTokenTrees() external view returns(TokenTree[] memory) {
 
         TokenTree[] memory tmpAvailableTokenTrees = new TokenTree[](availableTokenTreeCount + 1);
@@ -128,14 +147,13 @@ contract CarbB is ERC20, Ownable {
         
         require(msg.sender != address(0), "Purchaser address can not be nul");
         require(availableTokenTrees[_tokenTreeId].id > 0, string.concat("Token tree not found. Token tree Id ", Strings.toString(_tokenTreeId), " does not exists"));
-        require(price != 0, "Current token/tree price not set (admin)");
-        require(msg.value == price, string.concat("Incorrect amount", ", sent : ", Strings.toString(msg.value), ", current price is ", Strings.toString(price)));
-
+        require(msg.value == availableTokenTrees[_tokenTreeId].price, string.concat("Incorrect amount", ", sent : ", Strings.toString(msg.value), 
+                                                                        ", current price is ", Strings.toString(availableTokenTrees[_tokenTreeId].price)));
         _mint(msg.sender, 1);
 
         uint nextCustomerTokenTreeKey = getLastCustomerTokenTreeKey(msg.sender) + 1;
         customersTokenTreeCollections[msg.sender][nextCustomerTokenTreeKey] = availableTokenTrees[_tokenTreeId];
-        delete availableTokenTrees[_tokenTreeId];
+        removeAvailableTokenTree(_tokenTreeId);
     }
 
     ///@notice Get the last key in a customer token/tree mapping = the key of the last token/tree they own (NOT the token/tree id, the mapping key)
