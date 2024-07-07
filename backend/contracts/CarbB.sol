@@ -4,7 +4,6 @@ pragma solidity 0.8.22;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "../.deps/BokkyPooBahs/contracts/BokkyPooBahsDateTimeLibrary.sol";
 
 /// @title CARB-B Token contract
 /// @author JF Briche
@@ -229,4 +228,3 @@ contract CarbB is ERC20, Ownable {
     }
 
 }
-
