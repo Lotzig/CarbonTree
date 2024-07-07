@@ -28,10 +28,10 @@ contract CarbB is ERC20, Ownable {
     }
 
     //pour tests
-    uint public nextTokenTreeKey;   // Supprimer après les tests : toujours défini par getLastAvailableTokenTreeKey
-    uint public nextTokenTreeId;    // A garder en private
+    uint public lastAvailableTokenTreeKey;   // Supprimer après les tests : toujours défini par getLastAvailableTokenTreeKey
+    uint public lastAvailableTokenTreeId;    // A garder en private
     uint public availableTokenTreeCount;    // A garder en private ou public si info intéressante pour utilisateurs ou admin
-    // uint nextTokenTreeId;
+    // uint lastAvailableTokenTreeId;
     // uint availableTokenTreeCount;
 
     ///@notice The whole token/tree collection
@@ -51,9 +51,9 @@ contract CarbB is ERC20, Ownable {
         require(bytes(_locationOwnerName).length != 0, "_locationOwnerName can not be empty");
         require(bytes(_locationOwnerAddress).length != 0, "_locationOwnerAddress can not be empty");
 
-        nextTokenTreeId++;
+        lastAvailableTokenTreeId++;
 
-        TokenTree memory tokenTree = TokenTree({id: nextTokenTreeId, 
+        TokenTree memory tokenTree = TokenTree({id: lastAvailableTokenTreeId, 
                                                 species: _species, 
                                                 purchaseDate: block.timestamp, 
                                                 price: _price, 
@@ -62,8 +62,8 @@ contract CarbB is ERC20, Ownable {
                                                 locationOwnerName: _locationOwnerName, 
                                                 locationOwnerAddress: _locationOwnerAddress});
 
-        nextTokenTreeKey = getLastAvailableTokenTreeKey() + 1;
-        availableTokenTrees[nextTokenTreeKey] = tokenTree;
+        lastAvailableTokenTreeKey = getLastAvailableTokenTreeKey() + 1;
+        availableTokenTrees[lastAvailableTokenTreeKey] = tokenTree;
         ++availableTokenTreeCount;
     }
 
@@ -128,6 +128,21 @@ contract CarbB is ERC20, Ownable {
     }
 
 
+    ///@notice Get a customer tokens/trees collection
+    function getCustomerTokenTrees() external view returns(TokenTree[] memory) {
+
+        uint lastCustomerTokenTreeKey = getLastCustomerTokenTreeKey(msg.sender);
+        TokenTree[] memory tmpCustomerTokenTrees = new TokenTree[](lastCustomerTokenTreeKey + 1);
+
+        for(uint i = 1; i <= lastCustomerTokenTreeKey; i++) {
+            
+            tmpCustomerTokenTrees[i] = customersTokenTreeCollections[msg.sender][i];
+
+        }
+
+        return tmpCustomerTokenTrees;
+    }
+
     ///@notice Get tokens/trees available for bying
     function getAvailableTokenTrees() external view returns(TokenTree[] memory) {
 
@@ -146,7 +161,7 @@ contract CarbB is ERC20, Ownable {
     function buy (uint _tokenTreeId ) external payable {
         
         require(msg.sender != address(0), "Purchaser address can not be nul");
-        require(availableTokenTrees[_tokenTreeId].id > 0, string.concat("Token tree not found. Token tree Id ", Strings.toString(_tokenTreeId), " does not exists"));
+        require(availableTokenTrees[_tokenTreeId].id > 0, string.concat("Token tree not found. Token tree Id ", Strings.toString(_tokenTreeId), " is not available"));
         require(msg.value == availableTokenTrees[_tokenTreeId].price, string.concat("Incorrect amount", ", sent : ", Strings.toString(msg.value), 
                                                                         ", current price is ", Strings.toString(availableTokenTrees[_tokenTreeId].price)));
         _mint(msg.sender, 1);
@@ -166,5 +181,64 @@ contract CarbB is ERC20, Ownable {
 
         return --i;
     }
+
+    //notice Transfer a token/tree
+    function transfer (address _to, uint _tokenTreeId) public override returns (bool) {
+
+        require(customersTokenTreeCollections[msg.sender][_tokenTreeId].id > 0, 
+                string.concat("Token tree not found.Token tree Id ", Strings.toString(_tokenTreeId), " does not exist in your collection"));
+
+        // Transfer token
+        _transfer(msg.sender, _to, 1);
+
+        //Transfer token tree
+        uint nextCustomerTokenTreeKey = getLastCustomerTokenTreeKey(_to) + 1;
+        customersTokenTreeCollections[_to][nextCustomerTokenTreeKey] = customersTokenTreeCollections[msg.sender][_tokenTreeId];
+        removeCustomerTokenTree(msg.sender, _tokenTreeId);
+
+        return true;
+    }
+
+    //notice Transfer a token/tree from an owner to a recipient
+    function transferFrom (address _from, address _to, uint256 _tokenTreeId) public override returns (bool) {
+
+        require(customersTokenTreeCollections[_from][_tokenTreeId].id > 0, 
+                string.concat("Token tree not found.Token tree Id ", Strings.toString(_tokenTreeId), " does not exist in sender collection"));
+
+        // Transfer token
+        _spendAllowance(_from, msg.sender, 1);
+        _transfer(_from, _to, 1);
+
+        //Transfer token tree
+        uint nextCustomerTokenTreeKey = getLastCustomerTokenTreeKey(_to) + 1;
+        customersTokenTreeCollections[_to][nextCustomerTokenTreeKey] = customersTokenTreeCollections[_from][_tokenTreeId];
+        removeCustomerTokenTree(_from, _tokenTreeId);
+
+        return true;
+    }
+
+    ///@notice Remove a token/tree from a customer collection
+    function removeCustomerTokenTree(address _customer, uint _tokenTreeId) internal {
+        
+        delete customersTokenTreeCollections[_customer][_tokenTreeId];
+
+        uint lastCustomerTokenTreeKey = getLastCustomerTokenTreeKey(_customer);
+
+        // Recalibrate token/tree keys (avoid "blank" tokens/trees in the mapping)
+        for(uint i = _tokenTreeId; i < lastCustomerTokenTreeKey; i++) {
+
+            customersTokenTreeCollections[_customer][i] = customersTokenTreeCollections[_customer][i+1];
+
+        }
+        
+        delete customersTokenTreeCollections[_customer][lastCustomerTokenTreeKey];
+
+    }
+
+    ///@notice Get the contract balance
+    function getBalance() external view returns (uint256) {
+        return address(this).balance;
+    }
+
 }
 
