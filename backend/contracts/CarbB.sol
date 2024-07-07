@@ -9,16 +9,15 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 /// @author JF Briche
 /// @notice The token represents a tree that will be planted in a field
 contract CarbB is ERC20, Ownable {
-    
-    using Strings for uint;
 
     constructor() ERC20("CARBONTREE B", "CARB-B") Ownable(msg.sender) {}
+
+    using Strings for uint;
 
     /// @notice The token tree properties
     struct TokenTree {
         uint id;
         string species;
-        uint purchaseDate;
         uint price;
         uint plantingDate;
         string location;
@@ -36,6 +35,17 @@ contract CarbB is ERC20, Ownable {
     ///@notice The token/tree collection of each customer
     mapping(address customer => mapping(uint customerTokenTreeKey => TokenTree customerTokenTreeCollection)) customersTokenTreeCollections;
 
+    event AvailableTokenTreeAdded(uint id, string species, uint price, uint plantingDate, 
+                                string location, string locationOwnerName, string locationOwnerAddress);
+    event AvailableTokenTreeRemovedByPurchase(address purchaser, uint tokenTreeId);
+    event AvailableTokenTreeRemovedByAdmin(uint tokenTreeId);
+    event AvailableTokenTreeUpdated(uint id, string species, uint price, uint plantingDate, 
+                                string location, string locationOwnerName, string locationOwnerAddress);
+    event TokenTreePurchased(address purchaser, uint tokenTreeId);
+    event TokenTreeTransferred(uint tokenTreeId, address to);
+    event TokenTreeTransferredFrom(uint tokenTreeId, address from, address to);
+
+
     ///@notice Add a token/tree in the available tokens/trees mapping
     function addTokenTree (string memory _species, uint _price, uint _plantingDate, string memory _location, 
                     string memory _locationOwnerName, string memory _locationOwnerAddress) external onlyOwner {
@@ -51,7 +61,6 @@ contract CarbB is ERC20, Ownable {
 
         TokenTree memory tokenTree = TokenTree({id: lastAvailableTokenTreeId, 
                                                 species: _species, 
-                                                purchaseDate: block.timestamp, 
                                                 price: _price, 
                                                 plantingDate: _plantingDate, 
                                                 location: _location, 
@@ -62,6 +71,8 @@ contract CarbB is ERC20, Ownable {
         availableTokenTrees[lastAvailableTokenTreeKey] = tokenTree;
 
         availableTokenTreeCount++;
+
+        emit AvailableTokenTreeAdded(lastAvailableTokenTreeId, _species, _price, _plantingDate, _location, _locationOwnerName, _locationOwnerAddress);
     }
 
     ///@notice Remove a token/tree from collection
@@ -82,11 +93,14 @@ contract CarbB is ERC20, Ownable {
         // Decrement token count and last key
         availableTokenTreeCount--;
         lastAvailableTokenTreeKey--;
+
+        emit AvailableTokenTreeRemovedByPurchase(msg.sender, _tokenTreeId);
     }
 
     ///@notice Remove a token/tree from collection (admin)
     function removeAvailableTokenTreeAdmin(uint _tokenTreeId) external onlyOwner {
         removeAvailableTokenTree(_tokenTreeId);                
+        emit AvailableTokenTreeRemovedByAdmin(_tokenTreeId);
     }
 
     ///@notice Update an available token/tree
@@ -103,7 +117,6 @@ contract CarbB is ERC20, Ownable {
 
         TokenTree memory tokenTree = TokenTree({id: _tokenTreeId, 
                                                 species: _species, 
-                                                purchaseDate: block.timestamp, 
                                                 price: _price, 
                                                 plantingDate: _plantingDate, 
                                                 location: _location, 
@@ -111,9 +124,10 @@ contract CarbB is ERC20, Ownable {
                                                 locationOwnerAddress: _locationOwnerAddress});
 
         availableTokenTrees[_tokenTreeId] = tokenTree;
+        
+        emit AvailableTokenTreeUpdated(_tokenTreeId, _species, _price, _plantingDate, _location, _locationOwnerName, _locationOwnerAddress);
 
     }
-
 
     ///@notice Get a customer tokens/trees collection
     function getCustomerTokenTrees() external view returns(TokenTree[] memory) {
@@ -156,6 +170,8 @@ contract CarbB is ERC20, Ownable {
         uint nextCustomerTokenTreeKey = getLastCustomerTokenTreeKey(msg.sender) + 1;
         customersTokenTreeCollections[msg.sender][nextCustomerTokenTreeKey] = availableTokenTrees[_tokenTreeId];
         removeAvailableTokenTree(_tokenTreeId);
+
+        emit TokenTreePurchased(msg.sender, _tokenTreeId);
     }
 
     ///@notice Get the last key in a customer token/tree mapping = the key of the last token/tree they own (NOT the token/tree id, the mapping key)
@@ -183,6 +199,8 @@ contract CarbB is ERC20, Ownable {
         customersTokenTreeCollections[_to][nextCustomerTokenTreeKey] = customersTokenTreeCollections[msg.sender][_tokenTreeId];
         removeCustomerTokenTree(msg.sender, _tokenTreeId);
 
+        emit TokenTreeTransferred(_tokenTreeId, _to);
+
         return true;
     }
 
@@ -200,6 +218,8 @@ contract CarbB is ERC20, Ownable {
         uint nextCustomerTokenTreeKey = getLastCustomerTokenTreeKey(_to) + 1;
         customersTokenTreeCollections[_to][nextCustomerTokenTreeKey] = customersTokenTreeCollections[_from][_tokenTreeId];
         removeCustomerTokenTree(_from, _tokenTreeId);
+
+        emit TokenTreeTransferredFrom(_tokenTreeId, _from, _to);
 
         return true;
     }
@@ -228,3 +248,4 @@ contract CarbB is ERC20, Ownable {
     }
 
 }
+
