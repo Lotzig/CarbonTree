@@ -27,18 +27,15 @@ contract CarbB is ERC20, Ownable {
         string locationOwnerAddress;
     }
 
-    //pour tests
-    uint public lastAvailableTokenTreeKey;   // Supprimer après les tests : toujours défini par getLastAvailableTokenTreeKey
-    uint public lastAvailableTokenTreeId;    // A garder en private
-    uint public availableTokenTreeCount;    // A garder en private ou public si info intéressante pour utilisateurs ou admin
-    // uint lastAvailableTokenTreeId;
-    // uint availableTokenTreeCount;
+    uint public availableTokenTreeCount;
+    uint lastAvailableTokenTreeKey;
+    uint lastAvailableTokenTreeId;
 
-    ///@notice The whole token/tree collection
-    mapping(uint tokenTreeId => TokenTree) public availableTokenTrees;
+    ///@notice The token/tree collection being available for buying
+    mapping(uint tokenTreeId => TokenTree) availableTokenTrees;
 
     ///@notice The token/tree collection of each customer
-    mapping(address customer => mapping(uint customerTokenTreeKey => TokenTree customerTokenTreeCollection)) public customersTokenTreeCollections;
+    mapping(address customer => mapping(uint customerTokenTreeKey => TokenTree customerTokenTreeCollection)) customersTokenTreeCollections;
 
     ///@notice Add a token/tree in the available tokens/trees mapping
     function addTokenTree (string memory _species, uint _price, uint _plantingDate, string memory _location, 
@@ -62,20 +59,10 @@ contract CarbB is ERC20, Ownable {
                                                 locationOwnerName: _locationOwnerName, 
                                                 locationOwnerAddress: _locationOwnerAddress});
 
-        lastAvailableTokenTreeKey = getLastAvailableTokenTreeKey() + 1;
+        lastAvailableTokenTreeKey++;
         availableTokenTrees[lastAvailableTokenTreeKey] = tokenTree;
-        ++availableTokenTreeCount;
-    }
 
-    ///@notice Get available tokens/trees mapping last key
-    function getLastAvailableTokenTreeKey() public view returns (uint) {
-
-        uint i = 1;
-        while (availableTokenTrees[i].id > 0) {
-            ++i;
-        }
-
-        return --i;
+        availableTokenTreeCount++;
     }
 
     ///@notice Remove a token/tree from collection
@@ -93,8 +80,9 @@ contract CarbB is ERC20, Ownable {
         
         delete availableTokenTrees[availableTokenTreeCount];
 
-        // Decrement token count
-        --availableTokenTreeCount;
+        // Decrement token count and last key
+        availableTokenTreeCount--;
+        lastAvailableTokenTreeKey--;
     }
 
     ///@notice Remove a token/tree from collection (admin)
