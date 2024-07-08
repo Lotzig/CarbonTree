@@ -46,7 +46,13 @@ contract CarbB is ERC20, Ownable {
     event TokenTreeTransferredFrom(uint tokenTreeId, address from, address to);
 
 
-    ///@notice Add a token/tree in the available tokens/trees mapping
+    /// @notice Add a token/tree in the available tokens/trees mapping
+    /// @param _species The tree species
+    /// @param _price The tree price
+    /// @param _plantingDate The tree planting date
+    /// @param _location The tree location
+    /// @param _locationOwnerName The tree location owner first name and last name
+    /// @param _locationOwnerAddress The address of the tree location owner 
     function addTokenTree (string memory _species, uint _price, uint _plantingDate, string memory _location, 
                     string memory _locationOwnerName, string memory _locationOwnerAddress) external onlyOwner {
         
