@@ -37,7 +37,7 @@ contract CarbB is ERC20, Ownable {
 
     event AvailableTokenTreeAdded(uint id, string species, uint price, uint plantingDate, 
                                 string location, string locationOwnerName, string locationOwnerAddress);
-    event AvailableTokenTreeRemovedByPurchase(address purchaser, uint tokenTreeId);
+    event AvailableTokenTreeRemoved(address purchaser, uint tokenTreeId);
     event AvailableTokenTreeRemovedByAdmin(uint tokenTreeId);
     event AvailableTokenTreeUpdated(uint id, string species, uint price, uint plantingDate, 
                                 string location, string locationOwnerName, string locationOwnerAddress);
@@ -94,7 +94,7 @@ contract CarbB is ERC20, Ownable {
         availableTokenTreeCount--;
         lastAvailableTokenTreeKey--;
 
-        emit AvailableTokenTreeRemovedByPurchase(msg.sender, _tokenTreeId);
+        emit AvailableTokenTreeRemoved(msg.sender, _tokenTreeId);
     }
 
     ///@notice Remove a token/tree from collection (admin)
