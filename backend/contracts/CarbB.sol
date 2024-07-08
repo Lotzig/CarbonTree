@@ -161,7 +161,6 @@ contract CarbB is ERC20, Ownable {
     ///@notice Buy a token/tree and add it in the customer tree collection
     function buy (uint _tokenTreeId ) external payable {
         
-        require(msg.sender != address(0), "Purchaser address can not be nul");
         require(availableTokenTrees[_tokenTreeId].id > 0, string.concat("Token tree not found. Token tree Id ", Strings.toString(_tokenTreeId), " is not available"));
         require(msg.value == availableTokenTrees[_tokenTreeId].price, string.concat("Incorrect amount", ", sent : ", Strings.toString(msg.value), 
                                                                         ", current price is ", Strings.toString(availableTokenTrees[_tokenTreeId].price)));
@@ -240,11 +239,6 @@ contract CarbB is ERC20, Ownable {
         
         delete customersTokenTreeCollections[_customer][lastCustomerTokenTreeKey];
 
-    }
-
-    ///@notice Get the contract balance
-    function getBalance() external view returns (uint256) {
-        return address(this).balance;
     }
 
 }

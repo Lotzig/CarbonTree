@@ -217,7 +217,181 @@ describe("CarbB contract tests", function () {
     }); //describe("Updating a token/tree"
 
   }); //describe("Admin features"
+
+
+  describe("User features", function () {
+
+    describe("Buy a token/tree", function () {
+
+      it("Should revert if token/tree being purchased does not exists", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        
+        await expect(carbB.buy(1)).to.be.revertedWith("Token tree not found. Token tree Id 1 is not available");
+      });
+
+      it("Should revert if provided ether amount does not match the token/tree price", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await expect(carbB.buy(1)).to.be.revertedWith("Incorrect amount, sent : 0, current price is 1");
+      });
+
+      it("Should add the purchased token/tree into the purchaser token/tree collection", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.buy(1, {value: 1});
+        const customerTokenTrees = await carbB.getCustomerTokenTrees();
+
+        expect(customerTokenTrees.length).to.equal(2);
+      });
+
+      it("Should remove the purchased token/tree from available token/tree collection", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.buy(1, {value: 1});
+        const availableTokenTrees = await carbB.getAvailableTokenTrees();
+
+        expect(availableTokenTrees.length).to.equal(1);
+      });
+
+      it("Should emit Transfer event", async function () {
+        const { carbB, owner } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        
+        expect(await carbB.buy(1, {value: 1})).to.emit(carbB, "Transfer")
+                .withArgs(ethers.ZeroAddress, owner.address, 1);
+      });
+
+      it("Should emit AvailableTokenTreeRemoved event", async function () {
+        const { carbB, owner } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        
+        expect(await carbB.buy(1, {value: 1})).to.emit(carbB, "AvailableTokenTreeRemoved")
+                .withArgs(owner.address, 1);
+      });
+
+      it("Should emit TokenTreePurchased event", async function () {
+        const { carbB, owner } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        
+        expect(await carbB.buy(1, {value: 1})).to.emit(carbB, "TokenTreePurchased")
+                .withArgs(owner.address, 1);
+      });
+
+    }); //describe("Buy a token/tree"
+  
+    describe("Transfer a token/tree", function () {
     
+      it("Should revert if token/tree to be transferred is not owned by sender", async function () {
+        const { carbB, customer1 } = await loadFixture(deployCarbBFixture);
+        
+        await expect(carbB.transfer(customer1.address, 1)).to.be.revertedWith("Token tree not found.Token tree Id 1 does not exist in your collection");
+      });
+
+      it("Should add the transferred token/tree into the recipient collection", async function () {
+        const { carbB, customer1 } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.buy(1, {value: 1});
+        await carbB.transfer(customer1.address, 1);
+        const customerTokenTrees = await carbB.connect(customer1).getCustomerTokenTrees();
+
+        expect (customerTokenTrees[1].id).to.equal(1);
+      });
+
+      it("Should remove the transferred token/tree from sender collection", async function () {
+        const { carbB, customer1 } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.buy(1, {value: 1});
+        await carbB.transfer(customer1.address, 1);
+        const customerTokenTrees = await carbB.getCustomerTokenTrees();
+
+        expect (customerTokenTrees.length).to.equal(1);
+      });
+
+      it("Should emit Transfer event", async function () {
+        const { carbB, owner, customer1 } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.buy(1, {value: 1});
+        
+        expect(await carbB.transfer(customer1.address, 1)).to.emit(carbB, "Transfer")
+                .withArgs(owner.address, customer1.address, 1);
+      });
+
+      it("Should emit TokenTreeTransferred event", async function () {
+        const { carbB, owner, customer1 } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.buy(1, {value: 1});
+        
+        expect(await carbB.transfer(customer1.address, 1)).to.emit(carbB, "TokenTreeTransferred")
+                .withArgs(1, customer1.address);
+      });
+
+    }); //describe("Transfer a token/tree"
+
+    describe("Transfer a token/tree from another customer", function () {
+
+      it("Should revert if token/tree to be transferred is not owned by source customer", async function () {
+        const { carbB, owner, customer1 } = await loadFixture(deployCarbBFixture);
+        
+        await expect(carbB.transferFrom(owner.address, customer1.address, 1))
+                      .to.be.revertedWith("Token tree not found.Token tree Id 1 does not exist in sender collection");
+      });
+
+      it("Should revert if account executing the transfer is not allowed", async function () {
+        const { carbB, owner, customer1, customer2 } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.buy(1, {value : 1});
+
+        await expect(carbB.connect(customer1).transferFrom(owner.address, customer2.address, 1)).to.be.revertedWithCustomError(carbB, "ERC20InsufficientAllowance");
+      });
+
+      it("Should add the transferred token/tree into the recipient collection", async function () {
+        const { carbB, owner, customer1, customer2 } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.buy(1, {value: 1});
+        await carbB.approve(customer1.address, 1);
+        await carbB.connect(customer1).transferFrom(owner.address, customer2.address, 1);
+
+        const customerTokenTrees = await carbB.connect(customer2).getCustomerTokenTrees();
+
+        expect (customerTokenTrees[1].id).to.equal(1);
+      });
+
+      it("Should remove the transferred token/tree from source collection", async function () {
+        const { carbB, owner, customer1, customer2 } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.buy(1, {value: 1});
+        await carbB.approve(customer1.address, 1);
+        await carbB.connect(customer1).transferFrom(owner.address, customer2.address, 1);
+
+        const customerTokenTrees = await carbB.getCustomerTokenTrees();
+
+        expect (customerTokenTrees.length).to.equal(1);
+      });
+
+      it("Should emit Transfer event", async function () {
+        const { carbB, owner, customer1, customer2 } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.buy(1, {value: 1});
+        await carbB.approve(customer1.address, 1);
+        
+        expect(await carbB.connect(customer1).transferFrom(owner.address, customer2.address, 1)).to.emit(carbB, "Transfer")
+                .withArgs(owner.address, customer2.address, 1);
+      });
+     
+      it("Should emit TokenTreeTransferredFrom event", async function () {
+        const { carbB, owner, customer1, customer2 } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.buy(1, {value: 1});
+        await carbB.approve(customer1.address, 1);
+        
+        expect(await carbB.connect(customer1).transferFrom(owner.address, customer2.address, 1)).to.emit(carbB, "TokenTreeTransferredFrom")
+                .withArgs(1, owner.address, customer2.address);
+      });
+
+    }); //describe("Transfer a token/tree from another customer"
+
+  });  //describe("User features"
+
   /*
     it("Should receive and store the funds to carbB", async function () {
       const { carbB, lockedAmount } = await loadFixture(deployCarbBFixture);
