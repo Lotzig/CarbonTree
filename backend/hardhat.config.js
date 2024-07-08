@@ -4,3 +4,11 @@ require("@nomicfoundation/hardhat-toolbox");
 module.exports = {
   solidity: "0.8.22",
 };
+
+require('hardhat-docgen')
+docgen: {
+     path: './docs';
+     clear: true;
+     runOnCompile: true;
+};
+
