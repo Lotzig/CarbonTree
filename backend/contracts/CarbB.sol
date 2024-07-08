@@ -50,12 +50,12 @@ contract CarbB is ERC20, Ownable {
     function addTokenTree (string memory _species, uint _price, uint _plantingDate, string memory _location, 
                     string memory _locationOwnerName, string memory _locationOwnerAddress) external onlyOwner {
         
-        require(bytes(_species).length != 0, "_species can not be empty");
+        require(bytes(_species).length != 0, "Species can not be empty");
         require(_price > 0, "Price can not be nul");
-        require(_plantingDate != 0, "_plantingDate can not be nul");
-        require(bytes(_location).length != 0, "_location can not be empty");
-        require(bytes(_locationOwnerName).length != 0, "_locationOwnerName can not be empty");
-        require(bytes(_locationOwnerAddress).length != 0, "_locationOwnerAddress can not be empty");
+        require(_plantingDate != 0, "Planting date can not be nul");
+        require(bytes(_location).length != 0, "Location can not be empty");
+        require(bytes(_locationOwnerName).length != 0, "Location owner name can not be empty");
+        require(bytes(_locationOwnerAddress).length != 0, "Location owner address can not be empty");
 
         lastAvailableTokenTreeId++;
 
@@ -108,12 +108,12 @@ contract CarbB is ERC20, Ownable {
                                 string memory _locationOwnerName, string memory _locationOwnerAddress) external onlyOwner {
 
         require(availableTokenTrees[_tokenTreeId].id > 0, string.concat("Token tree not found. Token tree Id ", Strings.toString(_tokenTreeId), " does not exists"));
-        require(bytes(_species).length != 0, "_species can not be empty");
+        require(bytes(_species).length != 0, "Species can not be empty");
         require(_price > 0, "Price can not be nul");
-        require(_plantingDate != 0, "_plantingDate can not be nul");
-        require(bytes(_location).length != 0, "_location can not be empty");
-        require(bytes(_locationOwnerName).length != 0, "_locationOwnerName can not be empty");
-        require(bytes(_locationOwnerAddress).length != 0, "_locationOwnerAddress can not be empty");
+        require(_plantingDate != 0, "Planting date can not be nul");
+        require(bytes(_location).length != 0, "Location can not be empty");
+        require(bytes(_locationOwnerName).length != 0, "Location owner name can not be empty");
+        require(bytes(_locationOwnerAddress).length != 0, "Location owner address can not be empty");
 
         TokenTree memory tokenTree = TokenTree({id: _tokenTreeId, 
                                                 species: _species, 
