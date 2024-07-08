@@ -175,7 +175,7 @@ contract CarbB is ERC20, Ownable {
     }
 
     ///@notice Get the last key in a customer token/tree mapping = the key of the last token/tree they own (NOT the token/tree id, the mapping key)
-    function getLastCustomerTokenTreeKey(address _customer) public view returns (uint) {
+    function getLastCustomerTokenTreeKey(address _customer) internal view returns (uint) {
 
         uint i = 1;
         while (customersTokenTreeCollections[_customer][i].id > 0) {
