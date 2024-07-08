@@ -5,45 +5,224 @@ const {
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { expect } = require("chai");
 
-describe("Lock", function () {
+describe("CarbB contract tests", function () {
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
-  async function deployOneYearLockFixture() {
-    const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-    const ONE_GWEI = 1_000_000_000;
-
-    const lockedAmount = ONE_GWEI;
-    const unlockTime = (await time.latest()) + ONE_YEAR_IN_SECS;
-
+  async function deployCarbBFixture() {
     // Contracts are deployed using the first signer/account by default
-    const [owner, otherAccount] = await ethers.getSigners();
+    const [owner, customer1, customer2, customer3] = await ethers.getSigners();
 
-    const Lock = await ethers.getContractFactory("Lock");
-    const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+    const CarbB = await ethers.getContractFactory("CarbB");
+    const carbB = await CarbB.deploy(CarbB);
 
-    return { lock, unlockTime, lockedAmount, owner, otherAccount };
+    return { carbB, owner, customer1, customer2, customer3 };
   }
 
   describe("Deployment", function () {
-    it("Should set the right unlockTime", async function () {
-      const { lock, unlockTime } = await loadFixture(deployOneYearLockFixture);
+    it("Should deploy the contract", async function () {
+      const { carbB, owner } = await loadFixture(deployCarbBFixture);
 
-      expect(await lock.unlockTime()).to.equal(unlockTime);
+      expect(await carbB.owner()).to.equal(owner.address);
     });
 
-    it("Should set the right owner", async function () {
-      const { lock, owner } = await loadFixture(deployOneYearLockFixture);
-
-      expect(await lock.owner()).to.equal(owner.address);
+    it("Should name the token correctly", async function () {
+      const { carbB } = await loadFixture(deployCarbBFixture);
+      const name = "CARBONTREE B";
+      expect(await carbB.name()).to.equal(name);
     });
 
-    it("Should receive and store the funds to lock", async function () {
-      const { lock, lockedAmount } = await loadFixture(
-        deployOneYearLockFixture
-      );
+    it("Should set the token symbol correctly", async function () {
+      const { carbB } = await loadFixture(deployCarbBFixture);
+      const symbol = "CARB-B";
+      expect(await carbB.symbol()).to.equal(symbol);
+    });
+  }); //describe("Deployment"
 
-      expect(await ethers.provider.getBalance(lock.target)).to.equal(
+  describe("Admin features", function () {
+
+    describe("Adding a token/tree", function () {
+
+      it("Should revert if not owner", async function () {
+      const { carbB, customer1 } = await loadFixture(deployCarbBFixture);
+
+      await expect(carbB.connect(customer1).addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWithCustomError(carbB, "OwnableUnauthorizedAccount");
+      });
+
+      it("Should revert if passed species argument is empty", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await expect(carbB.addTokenTree("", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWith("Species can not be empty");
+      });
+
+      it("Should revert if passed price argument is nul", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await expect(carbB.addTokenTree("species", 0, 1, "location", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWith("Price can not be nul");
+      });
+
+      it("Should revert if passed planting date argument is nul", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await expect(carbB.addTokenTree("species", 1, 0, "location", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWith("Planting date can not be nul");
+      });
+      
+      it("Should revert if passed location argument is nul", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await expect(carbB.addTokenTree("species", 1, 1, "", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWith("Location can not be empty");
+      });
+      
+      it("Should revert if passed location owner name argument is nul", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await expect(carbB.addTokenTree("species", 1, 1, "location", "", "locationOwnerAddress")).to.be.revertedWith("Location owner name can not be empty");
+      });
+
+      it("Should revert if passed location owner address argument is nul", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await expect(carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "")).to.be.revertedWith("Location owner address can not be empty");
+      });
+
+      it("Should add an available token/tree", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")
+        const availableTokenTrees = await carbB.getAvailableTokenTrees(); 
+        expect(availableTokenTrees.length).to.equal(2);
+      });
+
+      it("Should increment the available tokens/trees count", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")
+        const availableTokenTreeCount = await carbB.availableTokenTreeCount();
+        expect(availableTokenTreeCount).to.equal(1);
+      });
+
+      it("Should emit AvailableTokenTreeAdded event", async function () {
+        const { carbB, availableTokenTreeCount } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")
+        
+        expect(await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")).to.emit(carbB, "AvailableTokenTreeAdded")
+        .withArgs(availableTokenTreeCount, "species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+      });
+    }); //describe("Adding a token/tree
+
+    describe("Removing a token/tree", function () {
+    
+      it("Should revert if not owner", async function () {
+        const { carbB, customer1 } = await loadFixture(deployCarbBFixture);
+        await expect(carbB.connect(customer1).removeAvailableTokenTreeAdmin(0)).to.be.revertedWithCustomError(carbB, "OwnableUnauthorizedAccount");
+      });
+
+      it("Should revert if passed token/tree key does not exists", async function () {
+        const { carbB, customer1 } = await loadFixture(deployCarbBFixture);
+        await expect(carbB.removeAvailableTokenTreeAdmin(0)).to.be.revertedWith("Token tree not found. Token tree Id 0 does not exists");
+      });
+
+      it("Should remove the token/tree from available tokens/trees array", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")
+        await carbB.removeAvailableTokenTreeAdmin(1);
+        const availableTokenTrees = await carbB.getAvailableTokenTrees(); 
+        expect(availableTokenTrees.length).to.equal(1);
+      });
+
+      it("Should decrement the available tokens/trees count", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")
+        await carbB.removeAvailableTokenTreeAdmin(1);
+        const availableTokenTreeCount = await carbB.availableTokenTreeCount();
+        expect(availableTokenTreeCount).to.equal(0);
+      });
+
+      it("Should emit AvailableTokenTreeRemovedByAdmin event", async function () {
+        const { carbB, owner } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")
+        
+        expect(await carbB.removeAvailableTokenTreeAdmin(1)).to.emit(carbB, "AvailableTokenTreeRemovedByAdmin")
+        .withArgs(owner.address, 1);
+      });
+
+      it("Should emit AvailableTokenTreeRemoved event", async function () {
+        const { carbB, owner } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")
+        
+        expect(await carbB.removeAvailableTokenTreeAdmin(1)).to.emit(carbB, "AvailableTokenTreeRemoved")
+        .withArgs(owner.address, 1);
+      });
+    }); //describe("Removing a token/tree"
+
+    describe("Updating a token/tree", function () {
+
+      it("Should revert if not owner", async function () {
+      const { carbB, customer1 } = await loadFixture(deployCarbBFixture);
+
+      await expect(carbB.connect(customer1).updateTokenTree(1, "species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWithCustomError(carbB, "OwnableUnauthorizedAccount");
+      });
+
+      it("Should revert if token/tree to be updated does not exists", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await expect(carbB.updateTokenTree(1, "species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWith("Token tree not found. Token tree Id 1 does not exists");
+      });
+
+      it("Should revert if passed species argument is empty", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await expect(carbB.updateTokenTree(1, "", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWith("Species can not be empty");
+      });
+
+      it("Should revert if passed price argument is nul", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await expect(carbB.updateTokenTree(1, "species", 0, 1, "location", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWith("Price can not be nul");
+      });
+
+      it("Should revert if passed planting date argument is nul", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await expect(carbB.updateTokenTree(1, "species", 1, 0, "location", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWith("Planting date can not be nul");
+      });
+      
+      it("Should revert if passed location argument is nul", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await expect(carbB.updateTokenTree(1, "species", 1, 1, "", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWith("Location can not be empty");
+      });
+      
+      it("Should revert if passed location owner name argument is nul", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await expect(carbB.updateTokenTree(1, "species", 1, 1, "location", "", "locationOwnerAddress")).to.be.revertedWith("Location owner name can not be empty");
+      });
+
+      it("Should revert if passed location owner address argument is nul", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await expect(carbB.updateTokenTree(1, "species", 1, 1, "location", "locationOwnerName", "")).to.be.revertedWith("Location owner address can not be empty");
+      });
+
+      it("Should update the token/tree", async function () {
+        const { carbB } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.updateTokenTree(1, "new species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")
+        const availableTokenTrees = await carbB.getAvailableTokenTrees();
+
+        expect(availableTokenTrees[1].species).to.equal("new species");
+      });
+
+      it("Should emit AvailableTokenTreeUpdated event", async function () {
+        const { carbB, availableTokenTreeCount } = await loadFixture(deployCarbBFixture);
+        await carbB.addTokenTree("species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.updateTokenTree(1, "new species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")
+        
+        expect(await carbB.updateTokenTree(1, "new species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")).to.emit(carbB, "AvailableTokenTreeUpdated")
+        .withArgs(availableTokenTreeCount, "new species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress");
+      });
+
+    }); //describe("Updating a token/tree"
+
+  }); //describe("Admin features"
+    
+  /*
+    it("Should receive and store the funds to carbB", async function () {
+      const { carbB, lockedAmount } = await loadFixture(deployCarbBFixture);
+
+      expect(await ethers.provider.getBalance(carbB.target)).to.equal(
         lockedAmount
       );
     });
@@ -61,66 +240,67 @@ describe("Lock", function () {
   describe("Withdrawals", function () {
     describe("Validations", function () {
       it("Should revert with the right error if called too soon", async function () {
-        const { lock } = await loadFixture(deployOneYearLockFixture);
+        const { carbB } = await loadFixture(deployCarbBFixture);
 
-        await expect(lock.withdraw()).to.be.revertedWith(
+        await expect(carbB.withdraw()).to.be.revertedWith(
           "You can't withdraw yet"
         );
       });
 
       it("Should revert with the right error if called from another account", async function () {
-        const { lock, unlockTime, otherAccount } = await loadFixture(
-          deployOneYearLockFixture
+        const { carbB, unlockTime, otherAccount } = await loadFixture(
+          deployCarbBFixture
         );
 
         // We can increase the time in Hardhat Network
         await time.increaseTo(unlockTime);
 
-        // We use lock.connect() to send a transaction from another account
-        await expect(lock.connect(otherAccount).withdraw()).to.be.revertedWith(
+        // We use carbB.connect() to send a transaction from another account
+        await expect(carbB.connect(otherAccount).withdraw()).to.be.revertedWith(
           "You aren't the owner"
         );
       });
 
       it("Shouldn't fail if the unlockTime has arrived and the owner calls it", async function () {
-        const { lock, unlockTime } = await loadFixture(
-          deployOneYearLockFixture
+        const { carbB, unlockTime } = await loadFixture(
+          deployCarbBFixture
         );
 
         // Transactions are sent using the first signer by default
         await time.increaseTo(unlockTime);
 
-        await expect(lock.withdraw()).not.to.be.reverted;
+        await expect(carbB.withdraw()).not.to.be.reverted;
       });
     });
 
     describe("Events", function () {
       it("Should emit an event on withdrawals", async function () {
-        const { lock, unlockTime, lockedAmount } = await loadFixture(
-          deployOneYearLockFixture
+        const { carbB, unlockTime, lockedAmount } = await loadFixture(
+          deployCarbBFixture
         );
 
         await time.increaseTo(unlockTime);
 
-        await expect(lock.withdraw())
-          .to.emit(lock, "Withdrawal")
+        await expect(carbB.withdraw())
+          .to.emit(carbB, "Withdrawal")
           .withArgs(lockedAmount, anyValue); // We accept any value as `when` arg
       });
     });
 
     describe("Transfers", function () {
       it("Should transfer the funds to the owner", async function () {
-        const { lock, unlockTime, lockedAmount, owner } = await loadFixture(
-          deployOneYearLockFixture
+        const { carbB, unlockTime, lockedAmount, owner } = await loadFixture(
+          deployCarbBFixture
         );
 
         await time.increaseTo(unlockTime);
 
-        await expect(lock.withdraw()).to.changeEtherBalances(
-          [owner, lock],
+        await expect(carbB.withdraw()).to.changeEtherBalances(
+          [owner, carbB],
           [lockedAmount, -lockedAmount]
         );
       });
     });
   });
-});
+*/  
+}); //describe("CarbB contract tests"
