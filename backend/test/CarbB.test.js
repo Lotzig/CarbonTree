@@ -228,16 +228,9 @@ describe("CarbB contract tests", function () {
         const provider = ethers.provider;
         const ownerInitialBalance = await provider.getBalance(owner.address);   
 
-        //console.log("Contract initial balance : " + await  provider.getBalance(await carbB.address));   
-        console.log("Owner initial balance : " + await provider.getBalance(owner.address));   
-
         await carbB.addTokenTree("species", 35000000000000000n, 1, "location", "locationOwnerName", "locationOwnerAddress");
         await carbB.connect(customer1).buy(1, {value: 35000000000000000n});
-
-        console.log("Owner balance after buy : " + await provider.getBalance(owner.address));   
-
         await carbB.withdraw();
-        console.log("Owner balance after withdraw : " + await provider.getBalance(owner.address));   
 
         expect(await provider.getBalance(owner.address)).to.be.greaterThan(ownerInitialBalance);
       });
