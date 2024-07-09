@@ -22,8 +22,7 @@ contract CarbB is ERC20, Ownable {
         uint plantingDate;
         string location;
         string locationOwnerName;
-        string locationOwnerAddress;
-    }
+        string locationOwnerAddress;}
 
     uint public availableTokenTreeCount;
     uint lastAvailableTokenTreeKey;
@@ -247,5 +246,11 @@ contract CarbB is ERC20, Ownable {
 
     }
 
+    /// @notice Withdraw contract ethers (only owner)
+    function withdraw() external onlyOwner {
+
+        (bool success, )= msg.sender.call{value: address(this).balance}("");
+        require (success, "Ether transfer failed");    
+    }
 }
 
