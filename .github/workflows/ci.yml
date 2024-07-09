@@ -38,5 +38,6 @@ jobs:
       - name: Security analysis
         uses: crytic/slither-action@v0.4.0
         with:
-          target: 'backend/contracts'
+          target: 'backend'
+          slither-args: . --filter-paths "node_modules"
       #  run: slither . --filter-paths "node_modules"
