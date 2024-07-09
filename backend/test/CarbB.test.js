@@ -216,6 +216,34 @@ describe("CarbB contract tests", function () {
 
     }); //describe("Updating a token/tree"
 
+    describe("Withdraw", function () {
+
+      it("Should revert if not owner", async function () {
+        const { carbB, customer1 } = await loadFixture(deployCarbBFixture);
+        await expect(carbB.connect(customer1).withdraw()).to.be.revertedWithCustomError(carbB, "OwnableUnauthorizedAccount");
+      });
+
+      it("Should add contract balance to owner balance", async function () {
+        const { carbB, owner, customer1 } = await loadFixture(deployCarbBFixture);
+        const provider = ethers.provider;
+        const ownerInitialBalance = await provider.getBalance(owner.address);   
+
+        //console.log("Contract initial balance : " + await  provider.getBalance(await carbB.address));   
+        console.log("Owner initial balance : " + await provider.getBalance(owner.address));   
+
+        await carbB.addTokenTree("species", 35000000000000000n, 1, "location", "locationOwnerName", "locationOwnerAddress");
+        await carbB.connect(customer1).buy(1, {value: 35000000000000000n});
+
+        console.log("Owner balance after buy : " + await provider.getBalance(owner.address));   
+
+        await carbB.withdraw();
+        console.log("Owner balance after withdraw : " + await provider.getBalance(owner.address));   
+
+        expect(await provider.getBalance(owner.address)).to.be.greaterThan(ownerInitialBalance);
+      });
+      
+    }); //describe("Withdraw"
+
   }); //describe("Admin features"
 
 
@@ -392,89 +420,4 @@ describe("CarbB contract tests", function () {
 
   });  //describe("User features"
 
-  /*
-    it("Should receive and store the funds to carbB", async function () {
-      const { carbB, lockedAmount } = await loadFixture(deployCarbBFixture);
-
-      expect(await ethers.provider.getBalance(carbB.target)).to.equal(
-        lockedAmount
-      );
-    });
-
-    it("Should fail if the unlockTime is not in the future", async function () {
-      // We don't use the fixture here because we want a different deployment
-      const latestTime = await time.latest();
-      const Lock = await ethers.getContractFactory("Lock");
-      await expect(Lock.deploy(latestTime, { value: 1 })).to.be.revertedWith(
-        "Unlock time should be in the future"
-      );
-    });
-  });
-
-  describe("Withdrawals", function () {
-    describe("Validations", function () {
-      it("Should revert with the right error if called too soon", async function () {
-        const { carbB } = await loadFixture(deployCarbBFixture);
-
-        await expect(carbB.withdraw()).to.be.revertedWith(
-          "You can't withdraw yet"
-        );
-      });
-
-      it("Should revert with the right error if called from another account", async function () {
-        const { carbB, unlockTime, otherAccount } = await loadFixture(
-          deployCarbBFixture
-        );
-
-        // We can increase the time in Hardhat Network
-        await time.increaseTo(unlockTime);
-
-        // We use carbB.connect() to send a transaction from another account
-        await expect(carbB.connect(otherAccount).withdraw()).to.be.revertedWith(
-          "You aren't the owner"
-        );
-      });
-
-      it("Shouldn't fail if the unlockTime has arrived and the owner calls it", async function () {
-        const { carbB, unlockTime } = await loadFixture(
-          deployCarbBFixture
-        );
-
-        // Transactions are sent using the first signer by default
-        await time.increaseTo(unlockTime);
-
-        await expect(carbB.withdraw()).not.to.be.reverted;
-      });
-    });
-
-    describe("Events", function () {
-      it("Should emit an event on withdrawals", async function () {
-        const { carbB, unlockTime, lockedAmount } = await loadFixture(
-          deployCarbBFixture
-        );
-
-        await time.increaseTo(unlockTime);
-
-        await expect(carbB.withdraw())
-          .to.emit(carbB, "Withdrawal")
-          .withArgs(lockedAmount, anyValue); // We accept any value as `when` arg
-      });
-    });
-
-    describe("Transfers", function () {
-      it("Should transfer the funds to the owner", async function () {
-        const { carbB, unlockTime, lockedAmount, owner } = await loadFixture(
-          deployCarbBFixture
-        );
-
-        await time.increaseTo(unlockTime);
-
-        await expect(carbB.withdraw()).to.changeEtherBalances(
-          [owner, carbB],
-          [lockedAmount, -lockedAmount]
-        );
-      });
-    });
-  });
-*/  
 }); //describe("CarbB contract tests"
