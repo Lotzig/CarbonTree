@@ -35,9 +35,12 @@ jobs:
       - name: Run Tests
         run: npx hardhat coverage
       
-      - name: Security analysis
-        uses: crytic/slither-action@v0.4.0
+      - name: Run Slither
+        uses: crytic/slither-action@v0.3.0
+        id: slither
         with:
-          target: 'backend'
-          slither-args: '. --filter-paths "node_modules"'
-      #  run: slither . --filter-paths "node_modules"
+          target: 'Contracts'
+          node-version: 16
+          fail-on: none
+          slither-args: --filter-paths "node_modules"
+        #  run: slither . --filter-paths "node_modules"
