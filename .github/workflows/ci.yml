@@ -39,7 +39,7 @@ jobs:
         uses: crytic/slither-action@v0.3.0
         id: slither
         with:
-          target: 'Contracts'
+          target: 'contracts'
           node-version: 16
           fail-on: none
           slither-args: --filter-paths "node_modules"
