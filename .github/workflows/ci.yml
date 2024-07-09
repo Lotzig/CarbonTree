@@ -34,3 +34,6 @@ jobs:
   
       - name: Run Tests
         run: npx hardhat coverage
+
+      - name: Security analysis
+        run: slither . --filter-paths "node_modules"
