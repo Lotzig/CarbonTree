@@ -34,14 +34,21 @@ contract CarbB is ERC20, Ownable {
     ///@notice The token/tree collection of each customer
     mapping(address customer => mapping(uint customerTokenTreeKey => TokenTree customerTokenTreeCollection)) customersTokenTreeCollections;
 
+    ///@notice Emitted when an available token/tree is added
     event AvailableTokenTreeAdded(uint id, string species, uint price, uint plantingDate, 
                                 string location, string locationOwnerName, string locationOwnerAddress);
+    ///@notice Emitted when an available token/tree is removed
     event AvailableTokenTreeRemoved(address purchaser, uint tokenTreeId);
+    ///@notice Emitted when an available token/tree is removed by admin
     event AvailableTokenTreeRemovedByAdmin(uint tokenTreeId);
+    ///@notice Emitted when an available token/tree is updated
     event AvailableTokenTreeUpdated(uint id, string species, uint price, uint plantingDate, 
                                 string location, string locationOwnerName, string locationOwnerAddress);
+    ///@notice Emitted when an available token/tree is purchased
     event TokenTreePurchased(address purchaser, uint tokenTreeId);
+    ///@notice Emitted when a customer token/tree is transfered    
     event TokenTreeTransferred(uint tokenTreeId, address to);
+    ///@notice Emitted when a customer token/tree is transfered with allowance     
     event TokenTreeTransferredFrom(uint tokenTreeId, address from, address to);
 
 
@@ -81,6 +88,7 @@ contract CarbB is ERC20, Ownable {
     }
 
     ///@notice Remove a token/tree from collection
+    ///@param _tokenTreeId The available token/tree Id
     function removeAvailableTokenTree(uint _tokenTreeId) internal {
         
         require(availableTokenTrees[_tokenTreeId].id > 0, string.concat("Token tree not found. Token tree Id ", Strings.toString(_tokenTreeId), " does not exists"));
@@ -103,12 +111,20 @@ contract CarbB is ERC20, Ownable {
     }
 
     ///@notice Remove a token/tree from collection (admin)
+    ///@param _tokenTreeId The available token/tree Id
     function removeAvailableTokenTreeAdmin(uint _tokenTreeId) external onlyOwner {
         removeAvailableTokenTree(_tokenTreeId);                
         emit AvailableTokenTreeRemovedByAdmin(_tokenTreeId);
     }
 
     ///@notice Update an available token/tree
+    ///@param _tokenTreeId The token/tree Id
+    ///@param _species The tree species
+    ///@param _price The tree price
+    ///@param _plantingDate The tree planting date
+    ///@param _location The tree location
+    ///@param _locationOwnerName The tree location owner first name and last name
+    ///@param _locationOwnerAddress The address of the tree location owner 
     function updateTokenTree(uint _tokenTreeId, string memory _species, uint _price, uint _plantingDate, string memory _location, 
                                 string memory _locationOwnerName, string memory _locationOwnerAddress) external onlyOwner {
 
@@ -135,6 +151,7 @@ contract CarbB is ERC20, Ownable {
     }
 
     ///@notice Get a customer tokens/trees collection
+    ///@return TokenTree[] An array of TokenTree structures containing the caller token/tree collection
     function getCustomerTokenTrees() external view returns(TokenTree[] memory) {
 
         uint lastCustomerTokenTreeKey = getLastCustomerTokenTreeKey(msg.sender);
@@ -150,6 +167,7 @@ contract CarbB is ERC20, Ownable {
     }
 
     ///@notice Get tokens/trees available for bying
+    ///@return TokenTree[] An array of TokenTree structures containing the available token/tree collection
     function getAvailableTokenTrees() external view returns(TokenTree[] memory) {
 
         TokenTree[] memory tmpAvailableTokenTrees = new TokenTree[](availableTokenTreeCount + 1);
@@ -164,6 +182,7 @@ contract CarbB is ERC20, Ownable {
     }
 
     ///@notice Buy a token/tree and add it in the customer tree collection
+    ///@param _tokenTreeId The id of the token/tree to buy
     function buy (uint _tokenTreeId ) external payable {
         
         require(availableTokenTrees[_tokenTreeId].id > 0, string.concat("Token tree not found. Token tree Id ", Strings.toString(_tokenTreeId), " is not available"));
@@ -179,6 +198,7 @@ contract CarbB is ERC20, Ownable {
     }
 
     ///@notice Get the last key in a customer token/tree mapping = the key of the last token/tree they own (NOT the token/tree id, the mapping key)
+    ///@param _customer The customer address
     function getLastCustomerTokenTreeKey(address _customer) internal view returns (uint) {
 
         uint i = 1;
@@ -189,7 +209,9 @@ contract CarbB is ERC20, Ownable {
         return --i;
     }
 
-    //notice Transfer a token/tree
+    ///@notice Transfer a token/tree
+    ///@param _to The address of the recipient
+    ///@param _tokenTreeId The id of the token/tree to be transferred
     function transfer (address _to, uint _tokenTreeId) public override returns (bool) {
 
         require(customersTokenTreeCollections[msg.sender][_tokenTreeId].id > 0, 
@@ -208,7 +230,10 @@ contract CarbB is ERC20, Ownable {
         return true;
     }
 
-    //notice Transfer a token/tree from an owner to a recipient
+    ///@notice Transfer a token/tree from an owner to a recipient
+    ///@param _from The address of the owner of the token/tree to be transferred from
+    ///@param _to The address of the recipient
+    ///@param _tokenTreeId The id of the token/tree to be transferred
     function transferFrom (address _from, address _to, uint256 _tokenTreeId) public override returns (bool) {
 
         require(customersTokenTreeCollections[_from][_tokenTreeId].id > 0, 
@@ -229,6 +254,8 @@ contract CarbB is ERC20, Ownable {
     }
 
     ///@notice Remove a token/tree from a customer collection
+    ///@param _customer The address of the token/tree collection owner
+    ///@param _tokenTreeId The id of the token/tree to be removed
     function removeCustomerTokenTree(address _customer, uint _tokenTreeId) internal {
         
         delete customersTokenTreeCollections[_customer][_tokenTreeId];
