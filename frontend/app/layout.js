@@ -1,4 +1,5 @@
 import RainbowKitAndWagmiProvider from "./RainbowKitAndWagmiProvider"
+import Layout from "@/components/shared/Layout"
 import "./globals.css"
 import { Inter as FontSans } from "next/font/google"
  
@@ -25,7 +26,9 @@ export default function RootLayout({ children }) {
         )}
       >
         <RainbowKitAndWagmiProvider>
-          {children}
+              <Layout>
+{children}
+	              </Layout>
         </RainbowKitAndWagmiProvider>
       </body>
     </html>
