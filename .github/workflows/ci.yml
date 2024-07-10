@@ -42,5 +42,5 @@ jobs:
           target: 'backend/contracts'
           node-version: 16
           fail-on: none
-          slither-args: --filter-paths "node_modules"
+          slither-args: --solc-remaps @openzeppelin=node_modules/@openzeppelin --filter-paths "node_modules"
         #  run: slither . --filter-paths "node_modules"
