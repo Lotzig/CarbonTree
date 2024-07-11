@@ -3,7 +3,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 const Header = () => {
     return (
         <nav className="navbar">
-            <div className="grow">Logo</div>
+            <div className="text-5xl">CARBONTREE</div>
             <div>
                 <ConnectButton />
             </div>
