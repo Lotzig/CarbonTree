@@ -111,7 +111,7 @@ describe("CarbB contract tests", function () {
 
       it("Should revert if passed token/tree key does not exists", async function () {
         const { carbB, customer1 } = await loadFixture(deployCarbBFixture);
-        await expect(carbB.removeAvailableTokenTreeAdmin(0)).to.be.revertedWith("Token tree not found. Token tree Id 0 does not exists");
+        await expect(carbB.removeAvailableTokenTreeAdmin(0)).to.be.revertedWith("Token tree not found. Token tree key 0 does not exists");
       });
 
       it("Should remove the token/tree from available tokens/trees array", async function () {
@@ -157,7 +157,7 @@ describe("CarbB contract tests", function () {
 
       it("Should revert if token/tree to be updated does not exists", async function () {
         const { carbB } = await loadFixture(deployCarbBFixture);
-        await expect(carbB.updateTokenTree(1, "species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWith("Token tree not found. Token tree Id 1 does not exists");
+        await expect(carbB.updateTokenTree(1, "species", 1, 1, "location", "locationOwnerName", "locationOwnerAddress")).to.be.revertedWith("Token tree not found. Token tree key 1 does not exists");
       });
 
       it("Should revert if passed species argument is empty", async function () {
@@ -247,7 +247,7 @@ describe("CarbB contract tests", function () {
       it("Should revert if token/tree being purchased does not exists", async function () {
         const { carbB } = await loadFixture(deployCarbBFixture);
         
-        await expect(carbB.buy(1)).to.be.revertedWith("Token tree not found. Token tree Id 1 is not available");
+        await expect(carbB.buy(1)).to.be.revertedWith("Token tree not found. Token tree key 1 is not available");
       });
 
       it("Should revert if provided ether amount does not match the token/tree price", async function () {
@@ -305,7 +305,7 @@ describe("CarbB contract tests", function () {
       it("Should revert if token/tree to be transferred is not owned by sender", async function () {
         const { carbB, customer1 } = await loadFixture(deployCarbBFixture);
         
-        await expect(carbB.transfer(customer1.address, 1)).to.be.revertedWith("Token tree not found.Token tree Id 1 does not exist in your collection");
+        await expect(carbB.transfer(customer1.address, 1)).to.be.revertedWith("Token tree not found.Token tree key 1 does not exist in your collection");
       });
 
       it("Should add the transferred token/tree into the recipient collection", async function () {
@@ -315,7 +315,7 @@ describe("CarbB contract tests", function () {
         await carbB.transfer(customer1.address, 1);
         const customerTokenTrees = await carbB.connect(customer1).getCustomerTokenTrees();
 
-        expect (customerTokenTrees[1].id).to.equal(1);
+        expect (customerTokenTrees[1].key).to.equal(1);
       });
 
       it("Should remove the transferred token/tree from sender collection", async function () {
@@ -354,7 +354,7 @@ describe("CarbB contract tests", function () {
         const { carbB, owner, customer1 } = await loadFixture(deployCarbBFixture);
         
         await expect(carbB.transferFrom(owner.address, customer1.address, 1))
-                      .to.be.revertedWith("Token tree not found.Token tree Id 1 does not exist in sender collection");
+                      .to.be.revertedWith("Token tree not found.Token tree key 1 does not exist in sender collection");
       });
 
       it("Should revert if account executing the transfer is not allowed", async function () {
@@ -374,7 +374,7 @@ describe("CarbB contract tests", function () {
 
         const customerTokenTrees = await carbB.connect(customer2).getCustomerTokenTrees();
 
-        expect (customerTokenTrees[1].id).to.equal(1);
+        expect (customerTokenTrees[1].key).to.equal(1);
       });
 
       it("Should remove the transferred token/tree from source collection", async function () {
