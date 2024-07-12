@@ -4,11 +4,9 @@ import { useState, useEffect } from "react";
 import { useToast } from "../ui/use-toast"; // Toast Shadcn/ui
 import { Button } from "../ui/button"; // Bouton Shadcn/ui
 import { Input } from "../ui/input"; // Input Shadcn/ui
-import { RocketIcon } from "@radix-ui/react-icons" // Icône fusée
-import { Alert, AlertDescription, AlertTitle, } from "@/components/ui/alert" // Alert Shadcn/ui
 
 //Contract access
-import { useReadContract, useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { contractAddress, contractAbi } from "@/constants";
 
 // Child components
@@ -18,7 +16,6 @@ import TokenTree from "./TokenTree";
 const Admin = () => {
 
   const { toast } = useToast() // Toast Shadcn/ui
-  //const [tokenTreeCollection, setTokenTreeCollection] = useState([]);
   const { data: hash, error, isPending: setIsPending, writeContract } = useWriteContract({
     mutation: {
       // onSuccess: () => {
@@ -34,7 +31,6 @@ const Admin = () => {
     address: contractAddress,
     abi: contractAbi,
     functionName: 'getAvailableTokenTrees',
-    account: contractAddress
   })
 
   const { isLoading: isConfirming, isSuccess, error: errorConfirmation } = useWaitForTransactionReceipt({
@@ -99,7 +95,7 @@ const Admin = () => {
       address: contractAddress,
       abi: contractAbi,
       functionName: 'addTokenTree',
-      args: [ speciesAdd, priceAdd, plantingDateAdd, locationAdd, locationOwnerNameAdd, locationOwnerAddressAdd]
+      args: [ speciesAdd, BigInt(priceAdd * 1E18), plantingDateAdd, locationAdd, locationOwnerNameAdd, locationOwnerAddressAdd]
     })
   }
 
@@ -117,7 +113,7 @@ const Admin = () => {
       address: contractAddress,
       abi: contractAbi,
       functionName: 'updateTokenTree',
-      args: [ tokenTreeKeyUpdate, speciesUpdate, priceUpdate, plantingDateUpdate, locationUpdate, locationOwnerNameUpdate, locationOwnerAddressUpdate]
+      args: [ tokenTreeKeyUpdate, speciesUpdate, BigInt(priceUpdate * 1E18), plantingDateUpdate, locationUpdate, locationOwnerNameUpdate, locationOwnerAddressUpdate]
     })
   }
 
@@ -144,7 +140,7 @@ const Admin = () => {
 
       <div className="w-1/4">
         <Input placeholder="Tree Species" onChange={(e) => setSpeciesAdd(e.target.value)} className="mb-2" />
-        <Input placeholder="Price" onChange={(e) => setPriceAdd(e.target.value)} className="mb-2"/>
+        <Input placeholder="Price (ETH)" onChange={(e) => setPriceAdd(e.target.value)} className="mb-2"/>
         <Input placeholder="Planting Date" onChange={(e) => setPlantingDateAdd(e.target.value)} className="mb-2"/>
         <Input placeholder="Tree Location" onChange={(e) => setLocationAdd(e.target.value)} className="mb-2"/>
         <Input placeholder="Tree Location Owner Name" onChange={(e) => setLocationOwnerNameAdd(e.target.value)} className="mb-2"/>
@@ -165,7 +161,7 @@ const Admin = () => {
       <div className="w-1/4">
         <Input placeholder="Key" onChange={(e) => setTokenTreeKeyUpdate(e.target.value)} className="mb-2" />
         <Input placeholder="Tree Species" onChange={(e) => setSpeciesUpdate(e.target.value)} className="mb-2" />
-        <Input placeholder="Price" onChange={(e) => setPriceUpdate(e.target.value)} className="mb-2"/>
+        <Input placeholder="Price (ETH)" onChange={(e) => setPriceUpdate(e.target.value)} className="mb-2"/>
         <Input placeholder="Planting Date" onChange={(e) => setPlantingDateUpdate(e.target.value)} className="mb-2"/>
         <Input placeholder="Tree Location" onChange={(e) => setLocationUpdate(e.target.value)} className="mb-2"/>
         <Input placeholder="Tree Location Owner Name" onChange={(e) => setLocationOwnerNameUpdate(e.target.value)} className="mb-2"/>
