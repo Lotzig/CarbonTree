@@ -152,7 +152,7 @@ const Customer = () => {
       <div className="flex">
         <Input placeholder="Token Tree Key" onChange={(e) => setTokenTreeKey(e.target.value)} className="mr-2 w-32" />
         <Input placeholder="Token Tree Price" onChange={(e) => setPrice(e.target.value)/*(BingInt(Number(e.target.value) * Number(1E18)))*/} className="mr-2 w-32" />
-        <Button variant="outline" disabled={setIsPending} onClick={buy} className="text-lg">{setIsPending ? ("Transaction pending..."):("Buy Token Tree")}</Button>
+        <Button variant="outline" disabled={setIsPending} onClick={buy} className="text-lg">{setIsPending ? ("Transaction pending..."):("Buy CARB-B")}</Button>
       </div>    
 
       <h2 className="mt-6 mb-4 text-3xl">Your CARB-B collection</h2>

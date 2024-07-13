@@ -6,7 +6,8 @@ import {
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit';
 import { WagmiProvider } from 'wagmi';
-import { hardhat, sepolia } from 'wagmi/chains';
+import { hardhat } from 'wagmi/chains'; // déploiement local
+import { sepolia } from '@/utils/sepolia'; // Dépoiement publique
 import {
   QueryClientProvider,
   QueryClient,

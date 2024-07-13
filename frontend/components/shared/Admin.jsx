@@ -146,14 +146,14 @@ const Admin = () => {
         <Input placeholder="Tree Location Owner Name" onChange={(e) => setLocationOwnerNameAdd(e.target.value)} className="mb-2"/>
         <Input placeholder="Tree Location Owner Address" onChange={(e) => setLocationOwnerAddressAdd(e.target.value)} className="mb-2"/>
 
-        <Button variant="outline" disabled={setIsPending} onClick={addTokenTree} className="text-lg">{setIsPending ? ("Transaction pending..."):("Add Token Tree")}</Button>
+        <Button variant="outline" disabled={setIsPending} onClick={addTokenTree} className="text-lg">{setIsPending ? ("Transaction pending..."):("Add CARB-B")}</Button>
       </div>    
 
       <h2 className="mt-6 mb-4 text-3xl">Remove CARB-B</h2>
       
       <div className="flex">
         <Input placeholder="Token tree key" onChange={(e) => setTokenTreeKeyRemove(e.target.value)} className="mr-2 w-32" />
-        <Button variant="outline" disabled={setIsPending} onClick={removeTokenTree} className="text-lg">{setIsPending ? ("Transaction pending..."):("Remove Token Tree")}</Button>
+        <Button variant="outline" disabled={setIsPending} onClick={removeTokenTree} className="text-lg">{setIsPending ? ("Transaction pending..."):("Remove CARB-B")}</Button>
       </div>
 
       <h2 className="mt-6 mb-4 text-3xl">Update CARB-B</h2>
@@ -167,7 +167,7 @@ const Admin = () => {
         <Input placeholder="Tree Location Owner Name" onChange={(e) => setLocationOwnerNameUpdate(e.target.value)} className="mb-2"/>
         <Input placeholder="Tree Location Owner Address" onChange={(e) => setLocationOwnerAddressUpdate(e.target.value)} className="mb-2"/>
 
-        <Button variant="outline" disabled={setIsPending} onClick={updateTokenTree} className="text-lg">{setIsPending ? ("Transaction pending..."):("Update Token Tree")}</Button>
+        <Button variant="outline" disabled={setIsPending} onClick={updateTokenTree} className="text-lg">{setIsPending ? ("Transaction pending..."):("Update CARB-B")}</Button>
       </div>    
 
     </>
