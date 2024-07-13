@@ -5,7 +5,7 @@ require("solidity-coverage");
 require("@nomicfoundation/hardhat-verify");
 
 const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "";
-const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
+const PRIVATE_KEY = process.env.PRIVATE_KEY || "5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a";
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 
 module.exports = {
