@@ -9,6 +9,7 @@ import { Input } from "../ui/input"; // Input Shadcn/ui
 //Contract access
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { contractAddress, contractAbi } from "@/constants";
+import { useAccount } from 'wagmi'
 
 // Child components
 import TokenTree from "./TokenTree";
@@ -16,6 +17,7 @@ import TokenTree from "./TokenTree";
 
 const Customer = () => {
 
+  const { address } = useAccount()
   const { toast } = useToast() // Toast Shadcn/ui
   const { data: hash, error, isPending: setIsPending, writeContract } = useWriteContract({
     mutation: {
@@ -43,6 +45,8 @@ const Customer = () => {
     address: contractAddress,
     abi: contractAbi,
     functionName: 'getCustomerTokenTrees',
+    account: address,
+    watch: true,
   })
 
   const { isLoading: isConfirming, isSuccess, error: errorConfirmation } = useWaitForTransactionReceipt({
@@ -57,7 +61,7 @@ const Customer = () => {
     if(fetchedAvailableTokenTreesError) {
       toast({
           title: "Available tokens loading error",
-          description: fetchTokenTreesError.shortMessage, 
+          description: fetchedAvailableTokenTreesError.shortMessage, 
           variant: "destructive",
           status: "error",
           duration: 4000,
@@ -129,7 +133,7 @@ const Customer = () => {
     <>
       <div className="text-4xl">YOUR ACCOUNT</div>
 
-      <h2 className="mt-6 mb-4 text-3xl">Available Token Trees</h2>
+      <h2 className="mt-6 mb-4 text-3xl">Available CARB-B collection</h2>
       <div className="flex flex-col w-full">
           {fetchedAvailableTokenTreesIsPending ? 
             ( <div>Loading...</div>
@@ -143,7 +147,7 @@ const Customer = () => {
           }  
       </div>
 
-      <h2 className="mt-6 mb-4 text-3xl">Buy a Token Tree</h2>
+      <h2 className="mt-6 mb-4 text-3xl">Buy CARB-B</h2>
 
       <div className="flex">
         <Input placeholder="Token Tree Key" onChange={(e) => setTokenTreeKey(e.target.value)} className="mr-2 w-32" />
@@ -151,12 +155,12 @@ const Customer = () => {
         <Button variant="outline" disabled={setIsPending} onClick={buy} className="text-lg">{setIsPending ? ("Transaction pending..."):("Buy Token Tree")}</Button>
       </div>    
 
-      <h2 className="mt-6 mb-4 text-3xl">Your Token Trees</h2>
+      <h2 className="mt-6 mb-4 text-3xl">Your CARB-B collection</h2>
       <div className="flex flex-col w-full">
           {fetchedCustomerTokenTreesIsPending ? 
             ( <div>Loading...</div>
             ) : 
-            ( fetchedCustomerTokenTrees?.length > 0 && fetchedCustomerTokenTrees?.map((tokenTree) => {
+            ( fetchedCustomerTokenTrees.length > 0 && fetchedCustomerTokenTrees.map((tokenTree) => {
                 return (
                   <TokenTree tokenTree={tokenTree} key={crypto.randomUUID()} />
                 )  

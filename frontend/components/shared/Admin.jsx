@@ -81,7 +81,7 @@ const Admin = () => {
     if(error) {
       toast({
           title: "Error",
-          description: error.shortMessage,
+          description: error.shortMessage || error.message,
           variant: "destructive", 
           status: "error",
           duration: 4000,
@@ -122,7 +122,7 @@ const Admin = () => {
     <>
       <div className="text-4xl">ADMINISTRATION</div>
 
-      <h2 className="mt-6 mb-4 text-3xl">Available Token Trees</h2>
+      <h2 className="mt-6 mb-4 text-3xl">Available CARB-B collection</h2>
       <div className="flex flex-col w-full">
           {FetchedTokenTreeCollectionIsPending ? 
             ( <div>Loading...</div>
@@ -136,7 +136,7 @@ const Admin = () => {
           }  
       </div>
 
-      <h2 className="mt-6 mb-4 text-3xl">Add a Token Tree</h2>
+      <h2 className="mt-6 mb-4 text-3xl">Add CARB-B</h2>
 
       <div className="w-1/4">
         <Input placeholder="Tree Species" onChange={(e) => setSpeciesAdd(e.target.value)} className="mb-2" />
@@ -149,14 +149,14 @@ const Admin = () => {
         <Button variant="outline" disabled={setIsPending} onClick={addTokenTree} className="text-lg">{setIsPending ? ("Transaction pending..."):("Add Token Tree")}</Button>
       </div>    
 
-      <h2 className="mt-6 mb-4 text-3xl">Remove a Token Tree</h2>
+      <h2 className="mt-6 mb-4 text-3xl">Remove CARB-B</h2>
       
       <div className="flex">
         <Input placeholder="Token tree key" onChange={(e) => setTokenTreeKeyRemove(e.target.value)} className="mr-2 w-32" />
         <Button variant="outline" disabled={setIsPending} onClick={removeTokenTree} className="text-lg">{setIsPending ? ("Transaction pending..."):("Remove Token Tree")}</Button>
       </div>
 
-      <h2 className="mt-6 mb-4 text-3xl">Update a Token Tree</h2>
+      <h2 className="mt-6 mb-4 text-3xl">Update CARB-B</h2>
 
       <div className="w-1/4">
         <Input placeholder="Key" onChange={(e) => setTokenTreeKeyUpdate(e.target.value)} className="mb-2" />
