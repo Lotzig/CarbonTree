@@ -138,7 +138,7 @@ const Customer = () => {
           {fetchedAvailableTokenTreesIsPending ? 
             ( <div>Loading...</div>
             ) : 
-            ( fetchedAvailableTokenTrees.length > 0 && fetchedAvailableTokenTrees.map((tokenTree) => {
+            ( fetchedAvailableTokenTrees?.length > 0 && fetchedAvailableTokenTrees.map((tokenTree) => {
                 return (
                   <TokenTree tokenTree={tokenTree} key={crypto.randomUUID()} />
                 )  
@@ -160,7 +160,7 @@ const Customer = () => {
           {fetchedCustomerTokenTreesIsPending ? 
             ( <div>Loading...</div>
             ) : 
-            ( fetchedCustomerTokenTrees.length > 0 && fetchedCustomerTokenTrees.map((tokenTree) => {
+            ( fetchedCustomerTokenTrees?.length > 0 && fetchedCustomerTokenTrees.map((tokenTree) => {
                 return (
                   <TokenTree tokenTree={tokenTree} key={crypto.randomUUID()} />
                 )  

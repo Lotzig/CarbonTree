@@ -34,7 +34,9 @@ jobs:
   
       - name: Run Tests
         run: npx hardhat coverage
-      
+        env:
+          PRIVATE_KEY: ${{ secrets.ENV.PRIVATE_KEY }}
+
       - name: Run Slither
         uses: crytic/slither-action@v0.3.0
         id: slither
